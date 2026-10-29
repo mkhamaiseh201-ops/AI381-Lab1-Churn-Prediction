@@ -1,0 +1,26 @@
+AI381 Lab 1 · Pain log
+Name:  mohammad omar khamaiseh              Student ID: 181267           Date:17/10/2026
+
+Start the stopwatch before you open the notebook. One line per step.
+
+Step               | Minutes | What failed or slowed me down                                       | Question I could not answer
+-------------------|---------|---------------------------------------------------------------------|----------------------------
+Round 1 (train)    |    20   | Understanding the notebook and locating the saved model.            |How can I verify that the correct model was saved?
+Round 1 (serve)    |    20   |  starting the API and opening Swagger.                              |How does the API load the saved model?
+Round 1 (3 x curl) |    70   |KeyError occurred because the input columns didnt match the expected |                                                                      |                             featuresI corrected the input and successfullytested three cases.    | How can I prevent feature mismatches automatically?
+Twist 1 (v2 data)  |     0   |  Not started yet.                                                   |What changed in the V2 dataset?
+Twist 2 (fresh env)|     0   | Not started yet.                                                    |Can I rebuild the project using only my notes?
+Twist 3 (version?) |     0   | Not started yet.                                                    |Which model version is the API serving?
+-------------------|---------|---------------------------------------------------------------------|----------------------------
+Total              | 110     | Number of failures:   1                                             |
+
+The one thing I would automate first, and why:I would automate API testing and input feature validation because this would detect missing or mismatched columns before making predictions and reduce debugging time.
+
+
+
+
+
+
+
+
+
