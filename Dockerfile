@@ -17,8 +17,7 @@ WORKDIR /app
 # Install dependencies from builder stage
 COPY --from=builder /install /usr/local
 RUN python -m pip uninstall -y wheel || true
-RUN python -m pip install --no-cache-dir wheel==0.46.2 && python -c "import wheel; assert wheel.__version__ == '0.46.2'"
-
+RUN python -m pip install --no-cache-dir --upgrade --force-reinstall wheel==0.46.2 jaraco.context==6.1.0
 
 # Copy application files
 COPY . .
