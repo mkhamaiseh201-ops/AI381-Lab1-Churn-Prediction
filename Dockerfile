@@ -16,6 +16,7 @@ WORKDIR /app
 
 # Install dependencies from builder stage
 COPY --from=builder /install /usr/local
+RUN python -m pip install --no-cache-dir --upgrade wheel==0.46.2
 
 # Copy application files
 COPY . .
