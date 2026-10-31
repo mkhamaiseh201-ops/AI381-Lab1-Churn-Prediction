@@ -53,3 +53,10 @@ ghcr.io/mkhamaiseh201-ops/ai381-lab1-churn-prediction
 Repository
 
 GitHub Repository
+Docker Image Digest
+
+The Docker image was successfully built, scanned with Trivy, and pushed to GitHub Container Registry (GHCR).
+
+Published Image Digest:
+
+ghcr.io/mkhamaiseh201-ops/ai381-lab1-churn-prediction@sha256:7b1b8cf2e46e5d873b615dd8c15d8534a393e98554dbcd558b8b837454b87081
