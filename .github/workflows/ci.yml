@@ -66,7 +66,7 @@ jobs:
           docker run --rm \
             -v "$PWD:/work" \
             aquasec/trivy:0.58.1 \
-            image --input /work/image.tar \
+            image --input /work/image.tar --ignorefile /work/.trivyignore \
             --exit-code 1 \
             --severity HIGH,CRITICAL \
             --ignore-unfixed

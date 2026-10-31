@@ -4,4 +4,3 @@ joblib
 fastapi
 uvicorn
 jupyter
-whell==0.46.2
