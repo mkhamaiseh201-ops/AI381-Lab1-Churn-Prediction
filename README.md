@@ -1,42 +1,55 @@
-# AI381 Lab 1 · The Manual Pipeline Race (starter kit)
+AI381 Lab 2 – Churn Prediction API
 
-Dr. Tariq Al-Omari · AI381 Machine Learning Operations · JUST · Fall 2026/27
+Course: AI381 – Machine Learning Operations
+University: Jordan University of Science and Technology (JUST)
+Instructor: Dr. Tariq Al-Omari
 
-Lab 1 is short, a little chaotic, and on purpose. You will deliver a model by hand, change it, and
-log what that costs you. There is no wrong result: an honest pain log is a great pain log.
+CI Status
 
-## What is in this kit
+Project Overview
 
-| File | What it is |
-|---|---|
-| `churn_v1.csv` | Customer churn data, version 1 (1,200 customers) |
-| `churn_v2.csv` | Version 2 of the same data. Something changed. You will find out in Twist 1 |
-| `lab1_baseline.ipynb` | The notebook that trains a logistic regression and saves `model.joblib` |
-| `app/main.py` | A small FastAPI service that loads `model.joblib` and serves `/predict` |
-| `sample_request.json` | One customer to send to the API |
-| `requirements.txt` | The packages the notebook author remembered to write down |
-| `pain_log_template.txt` | Copy it to `pain_log.txt` and fill it in as you go |
+This project packages a customer churn prediction model as a FastAPI service. It includes automated tests, Docker containerization, and a GitHub Actions CI/CD workflow.
 
-## The race (start your stopwatch first)
+Project Structure
 
-1. **Round 1.** Run the notebook with `churn_v1.csv`. Start the API by hand:
-   `uvicorn app.main:app --port 8000`
-   Send three predictions with curl, changing the values each time:
-   `curl -X POST localhost:8000/predict -H "Content-Type: application/json" -d @sample_request.json`
-2. **Twist 1.** Change the notebook to `churn_v2.csv`, retrain and redeploy. Find and fix what breaks.
-3. **Twist 2.** Create a brand-new virtual environment (or a Codespace) and rebuild everything using only your own notes.
-4. **Twist 3.** Answer: "Which model version is your API serving right now?" and explain why it is hard to prove.
-5. Finish `pain_log.txt`: minutes per step, every failure, every unanswered question.
+* src/train/train.py – Model training script.
+* src/app/main.py – FastAPI application.
+* tests/ – Automated tests.
+* Dockerfile – Multi-stage Docker build with a non-root runtime user and health check.
+* .github/workflows/ci.yml – Automated testing, image build, Trivy scan, and publishing to GHCR.
 
-## Setup
+Run with Docker
 
-- Python 3.11 or newer and a terminal. On Windows, use WSL2 with Ubuntu.
-- `python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
+Build and start the container:
 
-## Turning it in
+docker build -t ai381-churn .
+docker run -d --name ai381-churn -p 8000:8000 ai381-churn
 
-Record one 5–8 minute video with your face and voice, say each checkpoint aloud, and turn it in on the
-**Lab 1** assignment in the **AI381 MLOPs** team on Microsoft Teams (Lab Submissions channel, Assignments tab).
-The full instructions, checkpoints and rubric are on e-learning and on the Teams assignment.
+API Endpoints
 
-Questions: Thursday online office hours on Teams, the Lab Submissions channel, or talomari@just.edu.jo.
+* GET /health – Checks service health.
+* POST /predict – Returns a churn prediction.
+
+Open the API documentation at:
+
+http://localhost:8000/docs
+
+Automated Testing
+
+Run the tests locally:
+
+python -m pytest -v
+
+CI/CD Pipeline
+
+GitHub Actions automatically runs tests on pull requests and pushes to main. On pushes to main, it builds the Docker image, scans it with Trivy, and publishes it to GitHub Container Registry (GHCR), tagged with the commit SHA.
+
+Container Registry
+
+Docker images are published to:
+
+ghcr.io/mkhamaiseh201-ops/ai381-lab1-churn-prediction
+
+Repository
+
+GitHub Repository
