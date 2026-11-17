@@ -1,0 +1,5 @@
+-r requirements-docker.txt
+mlflow==2.22.2
+pytest
+httpx
+sqlalchemy<2.1
