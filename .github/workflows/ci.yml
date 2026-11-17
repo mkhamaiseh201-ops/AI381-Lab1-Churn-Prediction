@@ -1,4 +1,4 @@
-name: AI381 Lab 2 CI
+name: AI381 Lab 2 and Lab 3 CI
 
 on:
   push:
@@ -34,10 +34,31 @@ jobs:
         run: |
           python -m pytest -v
 
+  lab3-validation:
+    name: Lab 3 Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Validate Lab 3 Python files
+        run: |
+          python -m compileall -q src/train/train_lab3.py
+          python -m compileall -q src/train/promote_lab3.py
+
+      - name: Validate Docker Compose configuration
+        run: |
+          docker compose -f docker-compose.lab3.yml config --quiet
+
+      - name: Build Lab 3 Docker image
+        run: |
+          docker build -f Dockerfile.lab3 -t ai381-lab3-ci .
+
   build-scan-push:
     name: Build, Scan and Push Docker Image
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, lab3-validation]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     permissions:
