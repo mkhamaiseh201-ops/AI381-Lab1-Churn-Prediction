@@ -76,7 +76,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t "$IMAGE_NAME:$IMAGE_TAG" .
+          docker build -f Dockerfile.lab3 -t "$IMAGE_NAME:$IMAGE_TAG" .
 
       - name: Save Docker image
         run: |
