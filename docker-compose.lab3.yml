@@ -1,0 +1,46 @@
+services:
+  mlflow:
+    image: python:3.11-slim
+    working_dir: /mlflow
+    command: ["sh", "-c", "pip install --no-cache-dir mlflow==2.22.2 'sqlalchemy<2.1' && mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:////mlflow/mlflow.db --default-artifact-root /mlflow/artifacts"]
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  trainer:
+    user: "0:0"
+    build:
+      context: .
+      dockerfile: Dockerfile.lab3
+    command: ["sh", "-c", "python src/train/train_lab3.py && python src/train/promote_lab3.py"]
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - .:/app
+      - mlflow_data:/mlflow
+    depends_on:
+      mlflow:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.lab3
+    command: ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./artifacts:/app/artifacts
+      - ./model.joblib:/app/model.joblib:ro
+    depends_on:
+      trainer:
+        condition: service_completed_successfully
+
+volumes:
+  mlflow_data:
