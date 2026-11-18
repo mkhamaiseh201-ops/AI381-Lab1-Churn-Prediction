@@ -81,7 +81,7 @@ def main():
             mlflow.log_metrics({"f1":f1,"roc_auc":auc,"f1_tenure_le_12":f1_new,"f1_tenure_gt_12":f1_established,"p95_latency_ms":p95,"model_size_mb":size_mb})
             from mlflow.models import infer_signature
             signature = infer_signature(X_test, model.predict(X_test))
-            mlflow.sklearn.log_model(model, artifact_path="model", registered_model_name="AI381ChurnModel", signature=signature, input_example=sample)
+            mlflow.sklearn.log_model(model, artifact_path="model", registered_model_name="AI381ChurnModel", signature=signature, input_example=sample, skops_trusted_types=["sklearn.tree._tree.Tree"])
             print(f"{name}: F1={f1:.3f}, AUC={auc:.3f}, slice(<=12m)={f1_new:.3f}, slice(>12m)={f1_established:.3f}, p95={p95:.3f}ms, size={size_mb:.3f}MB, run={run.info.run_id}")
     print("Training complete. Run: python src/train/promote_lab3.py")
 
