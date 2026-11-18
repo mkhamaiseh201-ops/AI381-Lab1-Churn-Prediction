@@ -1,62 +1,122 @@
-AI381 Lab 2 – Churn Prediction API
+AI381 Lab 3 – Tracked, Gated and Shipped
 
 Course: AI381 – Machine Learning Operations
 University: Jordan University of Science and Technology (JUST)
 Instructor: Dr. Tariq Al-Omari
+Lab: 3 – Tracked, Gated and Shipped
+Deployment Option: Option B – Local Docker Compose
 
-CI Status
+1. Project Overview
 
-Project Overview
+This project extends the Lab 2 Customer Churn Prediction API by introducing MLflow experiment tracking, model comparison, model promotion, and containerized deployment.
 
-This project packages a customer churn prediction model as a FastAPI service. It includes automated tests, Docker containerization, and a GitHub Actions CI/CD workflow.
+The main objective is to make model training reproducible, select a suitable champion model, and serve it through a Docker-based API.
 
-Project Structure
+2. Technologies Used
 
-* src/train/train.py – Model training script.
-* src/app/main.py – FastAPI application.
+* Python
+* Scikit-learn
+* MLflow
+* FastAPI
+* Docker
+* Docker Compose
+* GitHub Actions
+* GitHub Container Registry (GHCR)
+
+3. Project Components
+
+* src/train/ – Model training scripts.
+* src/app/main.py – FastAPI prediction service.
 * tests/ – Automated tests.
-* Dockerfile – Multi-stage Docker build with a non-root runtime user and health check.
-* .github/workflows/ci.yml – Automated testing, image build, Trivy scan, and publishing to GHCR.
+* Dockerfile.lab3 – Lab 3 Docker image.
+* docker-compose.lab3.yml – Lab 3 Docker Compose configuration.
+* requirements-docker.txt – Application dependencies.
+* requirements-lab3.txt – Lab 3 dependencies.
+* .github/workflows/ci.yml – GitHub Actions CI workflow.
 
-Run with Docker
+4. MLflow Experiment Tracking
 
-Build and start the container:
+MLflow is used to track model training experiments and store model-related information.
 
-docker build -t ai381-churn .
-docker run -d --name ai381-churn -p 8000:8000 ai381-churn
+The tracking process includes:
 
-API Endpoints
+* Model parameters.
+* Evaluation metrics.
+* Training experiment information.
+* Model artifacts.
+* Model versions and champion alias.
 
-* GET /health – Checks service health.
-* POST /predict – Returns a churn prediction.
+MLflow UI:
 
-Open the API documentation at:
+http://localhost:5000
+
+5. Model Training and Selection
+
+Three candidate models are evaluated:
+
+* Logistic Regression
+* Random Forest
+* Gradient Boosting
+
+The models are compared using evaluation metrics, including F1-score.
+
+The selected model is promoted as the champion model according to the promotion process.
+
+6. Model Registry and Promotion
+
+The MLflow Model Registry stores model versions and identifies the selected model using the champion alias.
+
+The promotion process evaluates candidate models before selecting a model for serving.
+
+7. Deployment – Option B
+
+The project uses local Docker Compose deployment.
+
+Start the Lab 3 services:
+
+docker compose -f docker-compose.lab3.yml up -d --build
+
+Check running services:
+
+docker compose -f docker-compose.lab3.yml ps
+
+The prediction API is available at:
+
+http://localhost:8000
+
+API documentation:
 
 http://localhost:8000/docs
 
-Automated Testing
+8. API Endpoints
 
-Run the tests locally:
+* GET /health – Checks API health.
+* POST /predict – Returns a customer churn prediction.
 
-python -m pytest -v
+9. GitHub Actions
 
-CI/CD Pipeline
+GitHub Actions automates repository validation and Docker image build, security scanning, and publishing to GitHub Container Registry.
 
-GitHub Actions automatically runs tests on pull requests and pushes to main. On pushes to main, it builds the Docker image, scans it with Trivy, and publishes it to GitHub Container Registry (GHCR), tagged with the commit SHA.
+The workflow includes:
 
-Container Registry
+* Lint and Test.
+* Lab 3 validation.
+* Docker image build.
+* Trivy security scan.
+* GHCR publishing.
 
-Docker images are published to:
+10. Model Traceability
 
-ghcr.io/mkhamaiseh201-ops/ai381-lab1-churn-prediction
+The project aims to connect the deployed Docker image with its Git commit and the corresponding MLflow training run.
 
-Repository
+This provides traceability for identifying the model version used by the running service.
 
-GitHub Repository
-Docker Image Digest
+11. Repository
 
-The Docker image was successfully built, scanned with Trivy, and pushed to GitHub Container Registry (GHCR).
+GitHub Repository:
 
-Published Image Digest:
+https://github.com/mkhamaiseh201-ops/ai381-lab1-churn-prediction
 
-ghcr.io/mkhamaiseh201-ops/ai381-lab1-churn-prediction@sha256:7b1b8cf2e46e5d873b615dd8c15d8534a393e98554dbcd558b8b837454b87081
+12. Deployment Choice
+
+This project uses Option B – Local Docker Compose, as permitted by the Lab 3 instructions. This option provides the required local deployment path without requiring Azure Container Apps.
