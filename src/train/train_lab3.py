@@ -1,5 +1,5 @@
 from pathlib import Path
-import os, time, tempfile
+import os, time, hashlib, subprocess
 import joblib
 import mlflow
 import mlflow.sklearn
@@ -19,6 +19,16 @@ OUT = ROOT / "artifacts"
 EXPERIMENT = os.getenv("MLFLOW_EXPERIMENT_NAME", "AI381-Lab3-Churn")
 TRACKING = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
 
+def git_commit():
+    value = os.getenv("GITHUB_SHA") or os.getenv("COMMIT_SHA")
+    if value:
+        return value
+    try:
+        return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    except Exception:
+        return "local"
+
+
 
 def main():
     df = pd.read_csv(DATA)
@@ -34,6 +44,8 @@ def main():
     y_test = y_test.reset_index(drop=True)
     mlflow.set_tracking_uri(TRACKING)
     mlflow.set_experiment(EXPERIMENT)
+    data_hash = hashlib.sha256(DATA.read_bytes()).hexdigest()
+    commit_sha = git_commit()
 
     candidates = {
         "logistic_regression": LogisticRegression(max_iter=1000, class_weight="balanced"),
@@ -65,8 +77,11 @@ def main():
             joblib.dump(model,candidate_path)
             size_mb=candidate_path.stat().st_size/(1024*1024)
             mlflow.log_params({"candidate":name,"random_state":42,"test_size":0.2,"data_file":DATA.name})
+            mlflow.set_tags({"commit_sha": commit_sha, "data_sha256": data_hash, "dataset": DATA.name})
             mlflow.log_metrics({"f1":f1,"roc_auc":auc,"f1_tenure_le_12":f1_new,"f1_tenure_gt_12":f1_established,"p95_latency_ms":p95,"model_size_mb":size_mb})
-            mlflow.sklearn.log_model(model, artifact_path="model", registered_model_name="AI381ChurnModel")
+            from mlflow.models import infer_signature
+            signature = infer_signature(X_test, model.predict(X_test))
+            mlflow.sklearn.log_model(model, artifact_path="model", registered_model_name="AI381ChurnModel", signature=signature, input_example=sample)
             print(f"{name}: F1={f1:.3f}, AUC={auc:.3f}, slice(<=12m)={f1_new:.3f}, slice(>12m)={f1_established:.3f}, p95={p95:.3f}ms, size={size_mb:.3f}MB, run={run.info.run_id}")
     print("Training complete. Run: python src/train/promote_lab3.py")
 

@@ -38,6 +38,9 @@ services:
     volumes:
       - ./artifacts:/app/artifacts
       - ./model.joblib:/app/model.joblib:ro
+    environment:
+      COMMIT_SHA: ${COMMIT_SHA:-local}
+      IMAGE_TAG: ${IMAGE_TAG:-local}
     depends_on:
       trainer:
         condition: service_completed_successfully

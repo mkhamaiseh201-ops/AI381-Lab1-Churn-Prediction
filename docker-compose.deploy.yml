@@ -1,0 +1,22 @@
+services:
+  churn-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.lab3
+      args:
+        COMMIT_SHA: ${COMMIT_SHA:-local}
+    image: ai381-churn:${IMAGE_TAG:-local}
+    environment:
+      COMMIT_SHA: ${COMMIT_SHA:-local}
+      IMAGE_TAG: ${IMAGE_TAG:-local}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./artifacts:/app/artifacts:ro
+      - ./model.joblib:/app/model.joblib:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s

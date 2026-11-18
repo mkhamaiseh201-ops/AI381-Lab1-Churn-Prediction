@@ -1,122 +1,80 @@
-AI381 Lab 3 – Tracked, Gated and Shipped
+# AI381 Lab 3 – Tracked, Gated and Shipped Churn Prediction
 
-Course: AI381 – Machine Learning Operations
-University: Jordan University of Science and Technology (JUST)
-Instructor: Dr. Tariq Al-Omari
-Lab: 3 – Tracked, Gated and Shipped
-Deployment Option: Option B – Local Docker Compose
+**Course:** AI381 – Machine Learning Operations  
+**Deployment choice:** Option B – Local Docker Compose  
+**Repository:** https://github.com/mkhamaiseh201-ops/ai381-lab1-churn-prediction
 
-1. Project Overview
+## Overview
 
-This project extends the Lab 2 Customer Churn Prediction API by introducing MLflow experiment tracking, model comparison, model promotion, and containerized deployment.
+This repository extends the churn prediction API with MLflow experiment tracking, three candidate models, a quality/operations promotion gate, a registered `champion` model alias, and local Docker Compose deployment.
 
-The main objective is to make model training reproducible, select a suitable champion model, and serve it through a Docker-based API.
+## Lab 3 components
 
-2. Technologies Used
+- `src/train/train_lab3.py` – trains Logistic Regression, Random Forest, and Gradient Boosting candidates; logs metrics, dataset SHA-256, commit SHA, and model signature to MLflow.
+- `src/train/promote_lab3.py` – applies overall and slice F1, p95 latency, model-size, and champion-improvement gates; registers/promotes only an eligible improved model.
+- `MODEL_SELECTION.md` – documents candidate evaluation and the promotion policy.
+- `docker-compose.lab3.yml` – starts MLflow, the training/promotion job, and the API.
+- `docker-compose.deploy.yml` – runs the already-promoted champion API as a standalone deployment.
+- `scripts/smoke_test.sh` – checks `/health` and `/predict`.
+- `.github/workflows/ci.yml` – lint, tests, Lab 3 static validation, Docker build, Trivy scan, and GHCR publishing.
+- `.github/workflows/train.yml` – retrains candidates against a persistent MLflow registry and runs the champion promotion gate. Configure the `MLFLOW_TRACKING_URI` GitHub Actions secret (plus username/password secrets if the server requires authentication) before using this workflow.
 
-* Python
-* Scikit-learn
-* MLflow
-* FastAPI
-* Docker
-* Docker Compose
-* GitHub Actions
-* GitHub Container Registry (GHCR)
+## Local run – Option B
 
-3. Project Components
+Run these commands from the repository root with Docker Desktop running:
 
-* src/train/ – Model training scripts.
-* src/app/main.py – FastAPI prediction service.
-* tests/ – Automated tests.
-* Dockerfile.lab3 – Lab 3 Docker image.
-* docker-compose.lab3.yml – Lab 3 Docker Compose configuration.
-* requirements-docker.txt – Application dependencies.
-* requirements-lab3.txt – Lab 3 dependencies.
-* .github/workflows/ci.yml – GitHub Actions CI workflow.
+```powershell
+docker compose -f docker-compose.lab3.yml up --build
+```
 
-4. MLflow Experiment Tracking
+Open:
 
-MLflow is used to track model training experiments and store model-related information.
+- MLflow UI: http://localhost:5000
+- API docs: http://localhost:8000/docs
+- API health: http://localhost:8000/health
 
-The tracking process includes:
+Test the service in another PowerShell window:
 
-* Model parameters.
-* Evaluation metrics.
-* Training experiment information.
-* Model artifacts.
-* Model versions and champion alias.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke_test.ps1
+```
 
-MLflow UI:
+To stop the stack:
 
-http://localhost:5000
+```powershell
+docker compose -f docker-compose.lab3.yml down
+```
 
-5. Model Training and Selection
+## Deploy the promoted champion separately
 
-Three candidate models are evaluated:
+After `artifacts/champion.joblib` and `artifacts/champion_metadata.json` have been created by a successful promotion:
 
-* Logistic Regression
-* Random Forest
-* Gradient Boosting
+```powershell
+$env:COMMIT_SHA = (git rev-parse HEAD)
+$env:IMAGE_TAG = $env:COMMIT_SHA
+docker compose -f docker-compose.deploy.yml up --build -d
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke_test.ps1
+```
 
-The models are compared using evaluation metrics, including F1-score.
+Stop deployment:
 
-The selected model is promoted as the champion model according to the promotion process.
+```powershell
+docker compose -f docker-compose.deploy.yml down
+```
 
-6. Model Registry and Promotion
+## Promotion gate demonstration
 
-The MLflow Model Registry stores model versions and identifies the selected model using the champion alias.
+The training workflow has a manual `force_block` input. Run it with `true` to demonstrate a deliberate blocked promotion. The expected result is a failed promotion step containing `PROMOTION BLOCKED`; the champion alias is not changed. Run normally with `false` for the ordinary candidate-versus-champion comparison.
 
-The promotion process evaluates candidate models before selecting a model for serving.
+## Traceability
 
-7. Deployment – Option B
+The API `/health` response reports `model_version`, `mlflow_run_id`, `commit_sha`, and `image_tag`. These values are also stored in `artifacts/champion_metadata.json` and as MLflow model-version tags. CI image tags use the Git commit SHA.
 
-The project uses local Docker Compose deployment.
+## Submission evidence checklist
 
-Start the Lab 3 services:
-
-docker compose -f docker-compose.lab3.yml up -d --build
-
-Check running services:
-
-docker compose -f docker-compose.lab3.yml ps
-
-The prediction API is available at:
-
-http://localhost:8000
-
-API documentation:
-
-http://localhost:8000/docs
-
-8. API Endpoints
-
-* GET /health – Checks API health.
-* POST /predict – Returns a customer churn prediction.
-
-9. GitHub Actions
-
-GitHub Actions automates repository validation and Docker image build, security scanning, and publishing to GitHub Container Registry.
-
-The workflow includes:
-
-* Lint and Test.
-* Lab 3 validation.
-* Docker image build.
-* Trivy security scan.
-* GHCR publishing.
-
-10. Model Traceability
-
-The project aims to connect the deployed Docker image with its Git commit and the corresponding MLflow training run.
-
-This provides traceability for identifying the model version used by the running service.
-
-11. Repository
-
-GitHub Repository:
-
-https://github.com/mkhamaiseh201-ops/ai381-lab1-churn-prediction
-
-12. Deployment Choice
-
-This project uses Option B – Local Docker Compose, as permitted by the Lab 3 instructions. This option provides the required local deployment path without requiring Azure Container Apps.
+- [ ] MLflow shows three candidate runs and all required metrics/tags/signatures.
+- [ ] `MODEL_SELECTION.md` is committed.
+- [ ] A successful promotion and a deliberately blocked promotion are shown in GitHub Actions.
+- [ ] Local deployed API returns healthy `/health` and successful `/predict` results.
+- [ ] The API lineage fields match the promoted MLflow run and source commit.
+- [ ] Record the required 5–8 minute video with face and voice, and upload the MP4 and `repo.txt` to the LMS/Teams location specified by the instructor.
