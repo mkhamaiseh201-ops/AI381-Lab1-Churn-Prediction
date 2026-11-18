@@ -15,8 +15,8 @@ COPY requirements-lab3.txt .
 COPY requirements-docker.txt .
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements-lab3.txt \
+    && python -m pip install --no-cache-dir --upgrade 'setuptools>=78.1.1' \
     && useradd --create-home appuser
-RUN python -m pip install --no-cache-dir --upgrade 'setuptools>=78.1.1'
 COPY . .
 RUN mkdir -p artifacts && chown -R appuser:appuser /app
 USER appuser
