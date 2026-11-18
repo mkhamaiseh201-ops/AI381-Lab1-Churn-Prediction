@@ -5,9 +5,17 @@ LABEL org.opencontainers.image.revision=$COMMIT_SHA
 LABEL org.opencontainers.image.version=$IMAGE_TAG
 ENV COMMIT_SHA=$COMMIT_SHA IMAGE_TAG=$IMAGE_TAG
 WORKDIR /app
+
+# Apply current Debian security updates before installing Python dependencies.
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements-lab3.txt .
 COPY requirements-docker.txt .
-RUN pip install --no-cache-dir -r requirements-lab3.txt && useradd --create-home appuser
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements-lab3.txt \
+    && useradd --create-home appuser
 COPY . .
 RUN mkdir -p artifacts && chown -R appuser:appuser /app
 USER appuser

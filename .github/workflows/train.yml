@@ -17,7 +17,6 @@ on:
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   train-and-promote:
@@ -34,39 +33,50 @@ jobs:
           cache-dependency-path: requirements-lab3.txt
 
       - name: Install dependencies
-        run: python -m pip install -r requirements-lab3.txt
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-lab3.txt
 
-      - name: Require persistent MLflow tracking server
-        env:
-          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+      - name: Start MLflow tracking server for this workflow run
         run: |
-          if [ -z "$MLFLOW_TRACKING_URI" ]; then
-            echo "Set the GitHub Actions secret MLFLOW_TRACKING_URI to the persistent MLflow tracking server used by the champion registry."
-            exit 1
-          fi
+          mkdir -p "$RUNNER_TEMP/mlflow-artifacts"
+          nohup mlflow server \
+            --host 127.0.0.1 \
+            --port 5000 \
+            --backend-store-uri "sqlite:///$RUNNER_TEMP/mlflow.db" \
+            --default-artifact-root "file://$RUNNER_TEMP/mlflow-artifacts" \
+            > "$RUNNER_TEMP/mlflow-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/mlflow-server.pid"
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:5000/health >/dev/null; then
+              echo "MLflow tracking server is ready."
+              exit 0
+            fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/mlflow-server.log"
+          echo "MLflow server did not become ready."
+          exit 1
 
       - name: Train three candidates and log MLflow evidence
         env:
-          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
-          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+          MLFLOW_TRACKING_URI: http://127.0.0.1:5000
           GITHUB_SHA: ${{ github.sha }}
         run: python src/train/train_lab3.py
 
-      - name: Compare with champion and apply promotion gate
+      - name: Compare candidates and apply promotion gate
         env:
-          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
-          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+          MLFLOW_TRACKING_URI: http://127.0.0.1:5000
           GITHUB_SHA: ${{ github.sha }}
           GATE_FORCE_BLOCK: ${{ github.event.inputs.force_block || 'false' }}
           GATE_MIN_F1_GAIN: "0.005"
         run: python src/train/promote_lab3.py
 
-      - name: Upload champion artifacts
-        if: success()
+      - name: Upload MLflow database and champion artifacts
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: champion-${{ github.sha }}
-          path: artifacts/
-          if-no-files-found: error
+          name: lab3-mlflow-and-champion-${{ github.sha }}
+          path: |
+            artifacts/
+            ${{ runner.temp }}/mlflow.db
+            ${{ runner.temp }}/mlflow-artifacts/
+          if-no-files-found: warn

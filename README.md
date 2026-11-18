@@ -17,7 +17,7 @@ This repository extends the churn prediction API with MLflow experiment tracking
 - `docker-compose.deploy.yml` – runs the already-promoted champion API as a standalone deployment.
 - `scripts/smoke_test.sh` – checks `/health` and `/predict`.
 - `.github/workflows/ci.yml` – lint, tests, Lab 3 static validation, Docker build, Trivy scan, and GHCR publishing.
-- `.github/workflows/train.yml` – retrains candidates against a persistent MLflow registry and runs the champion promotion gate. Configure the `MLFLOW_TRACKING_URI` GitHub Actions secret (plus username/password secrets if the server requires authentication) before using this workflow.
+- `.github/workflows/train.yml` – starts an MLflow tracking server inside the GitHub Actions job, trains the three candidates, applies the promotion gate, and uploads the MLflow database/artifacts as workflow evidence. This CI server is job-scoped; the local Docker Compose MLflow volume is the persistent registry for the Option B demonstration.
 
 ## Local run – Option B
 
@@ -64,7 +64,7 @@ docker compose -f docker-compose.deploy.yml down
 
 ## Promotion gate demonstration
 
-The training workflow has a manual `force_block` input. Run it with `true` to demonstrate a deliberate blocked promotion. The expected result is a failed promotion step containing `PROMOTION BLOCKED`; the champion alias is not changed. Run normally with `false` for the ordinary candidate-versus-champion comparison.
+The training workflow has a manual `force_block` input. Run it with `true` to demonstrate a deliberate blocked promotion. The expected result is a failed promotion step containing `PROMOTION BLOCKED`. Run normally with `false` to demonstrate training and promotion in the workflow's isolated MLflow server. The persistent local champion registry used for deployment is maintained by the Docker Compose MLflow volume.
 
 ## Traceability
 

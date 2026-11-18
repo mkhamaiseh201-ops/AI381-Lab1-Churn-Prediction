@@ -1,5 +1,6 @@
 -r requirements-docker.txt
-mlflow==2.22.2
+mlflow==3.17.2
+pyarrow==23.0.1
 pytest
 httpx
 sqlalchemy<2.1
