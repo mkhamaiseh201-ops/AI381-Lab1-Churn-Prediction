@@ -49,7 +49,7 @@ jobs:
             --host 127.0.0.1 \
             --port 5000 \
             --allowed-hosts \
-            127.0.0.1,localhost \
+            127.0.0.1:5000,localhost:5000 \
             --backend-store-uri "sqlite:///$RUNNER_TEMP/mlflow.db" \
             --default-artifact-root "file://$RUNNER_TEMP/mlflow-artifacts" \
             > "$RUNNER_TEMP/mlflow-server.log" 2>&1 &
