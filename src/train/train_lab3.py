@@ -47,11 +47,7 @@ def main():
     data_hash = hashlib.sha256(DATA.read_bytes()).hexdigest()
     commit_sha = git_commit()
 
-    candidates = {
-        "logistic_regression": LogisticRegression(max_iter=1000, class_weight="balanced"),
-        "random_forest": RandomForestClassifier(n_estimators=160, max_depth=8, random_state=42, class_weight="balanced"),
-        "gradient_boosting": GradientBoostingClassifier(n_estimators=100, max_depth=2, random_state=42),
-    }
+    candidates = {"weak": LogisticRegression(C=0.00001, max_iter=1000)}
     OUT.mkdir(exist_ok=True)
     for name, estimator in candidates.items():
         pre = ColumnTransformer([
@@ -87,3 +83,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

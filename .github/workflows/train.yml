@@ -1,6 +1,13 @@
 name: AI381 Lab 3 Champion Training and Promotion Gate
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/train/**'
+      - 'churn_v2.csv'
+      - 'requirements-lab3.txt'
+      - '.github/workflows/train.yml'
   workflow_dispatch:
     inputs:
       force_block:
@@ -41,6 +48,8 @@ jobs:
           nohup mlflow server \
             --host 127.0.0.1 \
             --port 5000 \
+            --allowed-hosts \
+            127.0.0.1:5000,localhost:5000 \
             --backend-store-uri "sqlite:///$RUNNER_TEMP/mlflow.db" \
             --default-artifact-root "file://$RUNNER_TEMP/mlflow-artifacts" \
             > "$RUNNER_TEMP/mlflow-server.log" 2>&1 &
